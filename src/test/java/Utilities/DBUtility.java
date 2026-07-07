@@ -6,12 +6,40 @@ import java.util.ArrayList;
 public class DBUtility {
 
     // ham bilgilerin tutulduğu yerden benim verdiğim kritere göre billeri al
-    // 2 boyutlu bir list olarak bana ver
+    // 2 boyutlu bir list olarak bana ver...
+    // Neden List, Neden Array? : Çünkü Db bilgileri Başlık altında birer column ve Row by Row , satır sdatır gerliyor da ondan...
     // getDataFromDB metodu oluşturmak üzere
+    public static Connection connection;
+    public static Statement sorguEkrani;
+    private static ResultSet resultSet;
 
-    public static ArrayList<ArrayList<String>> getListData(String sorgu){
-        ArrayList<ArrayList<String>> tablo=new ArrayList<>();
-        DBConnectionOpen();
+    public static void JDBC_Open() {
+        String serverDBURL = "jdbc:mysql://acela.proxy.rlwy.net:15150/employees";
+        String username = "sdet";
+        String password = "SDET123!";
+
+        try {
+            connection = DriverManager.getConnection(serverDBURL, username, password);
+            sorguEkrani = connection.createStatement();
+        } catch (Exception ex) {
+            System.out.println("ex.getMessage() = " + ex.getMessage());
+        }
+    }
+
+
+    public static void JDBC_Close() {
+        try {
+            connection.close();
+        } catch (Exception ex) {
+            System.out.println("ex.getMessage() = " + ex.getMessage());
+        }
+    }
+
+
+    public static ArrayList<ArrayList<String>>
+
+    getListData(String sorgu) {
+        ArrayList<ArrayList<String>> tablo = new ArrayList<>();
 
         try {
             ResultSet rs = sorguEkrani.executeQuery(sorgu);
@@ -19,49 +47,39 @@ public class DBUtility {
             int kolonSayisi = rsmd.getColumnCount();
 
             while (rs.next()) {
-                ArrayList<String> satir=new ArrayList<>();
+                ArrayList<String> satir = new ArrayList<>();
                 for (int i = 1; i <= kolonSayisi; i++)
                     satir.add(rs.getString(i));
 
                 tablo.add(satir);
             }
-        }
-        catch(Exception ex)
-        {
+        } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
 
-        DBConnectionClose();
         return tablo;
     }
 
 
-    public static Connection connection;
-    public static Statement sorguEkrani;
-
-    public static void DBConnectionOpen(){
-        String serverDBURL="jdbc:mysql://acela.proxy.rlwy.net:15150/sakila";
-        String username="sdet";
-        String password="SDET123!";
-
+    public static void executeQuery(String sql) {
         try {
-            connection = DriverManager.getConnection(serverDBURL, username, password);
-            sorguEkrani = connection.createStatement();
-        }
-        catch (Exception ex)
-        {
-            System.out.println("ex.getMessage() = " + ex.getMessage());
+            sorguEkrani = connection.createStatement(
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY);
+            resultSet = sorguEkrani.executeQuery(sql);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public static void DBConnectionClose(){
+    public static int getRowCount() {
         try {
-            connection.close();
-        }
-        catch (Exception ex)
-        {
-            System.out.println("ex.getMessage() = " + ex.getMessage());
+            int row = resultSet.getRow();
+            resultSet.last();
+            resultSet.beforeFirst();
+            return row;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
-
 }

@@ -1,0 +1,1433 @@
+
+**** BU DOSYAYI İNCELEYEBİLİRSİNİZ ARKADAŞLAR..
+**** PROJENİN SON HALİNİ DC KANALINA YÜKLERKEN BU DOSYAYI SİLECEĞİM.
+***** FAYDALI OLDUĞUNU DÜŞÜNEN ARKADAŞ KOPYALAYIP ALABİLİR......
+
+
+interview lerde neler soruyorlar???
+
+JDBC Nedir ?
+
+Veritabanını automation yapmama yardımcı olan kütüphanedir.
+Sorgularımı gönderiyorum, gelen sonuçlarla , web deki sonuçları
+karşılaştırıyorum.
+
+JDBC yi nasıl kullanırsın ?
+
+URL, username, password vererek bir Connection oluştururum.
+Bu connection Üzerinden sorgularımı çalıştıracağım "statement"
+oluştururum. Sorgularımı çalıştırıp, sonuçları yani ResulSet i alırım...
+
+----------------------------------------------------------------------------
+
+amacımız şu : sql komutlarını java kodu ile çalıştırıp,
+dönen tüm dataları(satırlardan oluşmuş tablo) ArrayList olarak almak
+->
+Java da DB ye nasıl bağlanıp sql i çalışrıcağımızı öğrendik
+Connection con=DriveManager.getConnection(url,username,pass);
+Statement sorguEkranı=con.CreateStatement();
+ResultSet rs=sorguEkranı.ExecuteQuery(sql);
+ResultSetMetaDat rsmd=rs.geResultMetaData();
+
+ArrayList<String> satir=new ArrayList(); 1 boyutlu
+ArrayList < ArrayList<String> > tablo=new ArrayList();
+
+
+while(rs.next()){
+ for(i=1; i< rsmd.getColumnCount();i++)
+   satir.add(rs.getString(i))
+
+   tablo.add(satir);
+}
+
+
+---------------------------------------------------------------------------
+ÖRNEK UYGULAMA:
+
+// Soru: City tablosundaki tüm şehir isi,mlerini next ile ekrana yazdırınız.
+
+@Test
+public void Test1() throws SQLException {
+String serverUrl = "jdbc:mysql://35.224.183.228:3306/sakila";
+String username = "elamysqluser";
+String password = ")KH\\Z;,sPIJVG>1$";
+
+Connection baglanti = DriverManager.getConnection(serverUrl, username, password);
+Statement sorguEkrani = baglanti.createStatement();
+ResultSet sonucTablosuGostergesi = sorguEkrani.executeQuery("select * from city");
+
+while(sonucTablosuGostergesi.next())
+System.out.println(sonucTablosuGostergesi.getString("city"));
+
+baglanti.close();
+
+
+-----------------------------------------------------------------------------
+
+
+1. IntelliJ'de Maven Projesi Oluştur
+
+File    New        Project
+Seçimler
+
+Project : Maven
+JDK : 21
+Language : Java
+
+Project Name
+Project12_SQL
+Finish.
+
+
+
+2. POM.xml içerisine MySQL connector ve TestNG dependencilerini yapıştır, yükle...
+
+<!-- JDBC - MySql için eklendi -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.18</version>
+        </dependency>
+
+
+
+
+3. JDBC_PArent olutur.. İçine:
+	MySQL Setup adımlarını Connection adı ile kaydediyoruz..
+	1.Connection + 
+	2. isim ver
+	3.username
+	4. PW
+	5. IP /Port bilgisi
+ Bu bilgileri İntellij projesinde src/Terst/java altına oluşturacağın JDBC klasörü içine oluşturacağın JDBC_Parent.class içine kaydet.
+
+Connection u buradan aktive edeceğiz....
+
+
+
+
+4. 3) Package Yapısı
+
+src
+	test
+		java
+        		Utilities:
+			            DBUtility.java
+			            ConfigReader.java (?) Bu gerekli mi bilmiyorum..
+
+	 test
+
+    		java
+
+       			JDBC_Tests:
+		            		SQLProjectTest.java
+					JDBC_Parent.java
+
+
+
+
+5. Query ler: 
+
+
+
+
+6. Sonuçları Tablo olarak almayacağız.. O ayrı bir işlem.. Apache POI
+Satır satır okuyup list e dönüştüreceğiz. DB Utility bu işi yapacak..
+
+
+7. QUERRY ler................................................
+
+# Soru 1 **D001 departmanındaki tüm çalışanları listeleyiniz.**
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name
+FROM employees e
+JOIN dept_emp de
+ON e.emp_no=de.emp_no
+WHERE de.dept_no='d001';
+
+### TestNG
+
+@Test
+public void Question01(){
+    String sql="""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name
+            FROM employees e
+            JOIN dept_emp de
+            ON e.emp_no=de.emp_no
+            WHERE de.dept_no='d001';
+            """;
+
+    DBUtility.executeQuery(sql);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-----------------------------------------------------
+
+# Soru 2 **Human Resources departmanındaki tüm çalışanları listeleyiniz.**
+
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name
+FROM employees e
+JOIN dept_emp de
+ON e.emp_no=de.emp_no
+JOIN departments d
+ON de.dept_no=d.dept_no
+WHERE d.dept_name='Human Resources';
+
+### TestNG
+
+@Test
+public void Question02(){
+
+    String sql="""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name
+            FROM employees e
+            JOIN dept_emp de
+            ON e.emp_no=de.emp_no
+            JOIN departments d
+            ON de.dept_no=d.dept_no
+            WHERE d.dept_name='Human Resources';
+            """;
+
+    DBUtility.executeQuery(sql);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+--------------------------------------------------------
+
+# Soru 3 **Tüm çalışanların ortalama maaşını hesaplayınız.**
+
+### SQL
+
+SELECT AVG(salary) OrtalamaMaas
+FROM salaries;
+
+
+### TestNG
+
+@Test
+public void Question03(){
+
+    DBUtility.executeQuery("""
+            SELECT AVG(salary) OrtalamaMaas
+            FROM salaries;
+            """);
+
+    List<HashMap<String,String>> data=DBUtility.getListData();
+
+    Assert.assertEquals(data.size(),1);
+
+}
+
+-----------------------------------------------
+
+# Soru 4 **Erkek çalışanların ortalama maaşını hesaplayınız.**
+
+### SQL
+
+SELECT AVG(s.salary)
+FROM salaries s
+JOIN employees e
+ON s.emp_no=e.emp_no
+WHERE e.gender='M';
+
+### TestNG
+
+@Test
+public void Question04(){
+
+    DBUtility.executeQuery("""
+            SELECT AVG(s.salary)
+            FROM salaries s
+            JOIN employees e
+            ON s.emp_no=e.emp_no
+            WHERE e.gender='M';
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+-------------------------------------------------
+
+# Soru 5
+
+**Kadın çalışanların ortalama maaşını hesaplayınız.**
+
+### SQL
+
+SELECT AVG(s.salary)
+FROM salaries s
+JOIN employees e
+ON s.emp_no=e.emp_no
+WHERE e.gender='F';
+
+### TestNG
+
+@Test
+public void Question05(){
+
+    DBUtility.executeQuery("""
+            SELECT AVG(s.salary)
+            FROM salaries s
+            JOIN employees e
+            ON s.emp_no=e.emp_no
+            WHERE e.gender='F';
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+------------------------------------------------------------
+
+# Soru 6
+
+**Sales departmanında maaşı 70000'den büyük çalışanları listeleyiniz.**
+
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name,
+       s.salary
+FROM employees e
+JOIN salaries s
+ON e.emp_no=s.emp_no
+JOIN dept_emp de
+ON e.emp_no=de.emp_no
+JOIN departments d
+ON de.dept_no=d.dept_no
+WHERE d.dept_name='Sales'
+AND s.salary>70000;
+
+### TestNG
+
+@Test
+public void Question06(){
+
+    DBUtility.executeQuery("""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name,
+                   s.salary
+            FROM employees e
+            JOIN salaries s
+            ON e.emp_no=s.emp_no
+            JOIN dept_emp de
+            ON e.emp_no=de.emp_no
+            JOIN departments d
+            ON de.dept_no=d.dept_no
+            WHERE d.dept_name='Sales'
+            AND s.salary>70000;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+---------------------------------------------------
+
+# Soru 7
+
+**Maaşı 50000 ile 100000 arasında olan çalışanları listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM salaries
+WHERE salary BETWEEN 50000 AND 100000;
+
+### TestNG
+
+@Test
+public void Question07(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM salaries
+            WHERE salary BETWEEN 50000 AND 100000;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+----------------------------------------------------
+
+# Soru 8
+
+**Her departmanın ortalama maaşını hesaplayınız.**
+
+### SQL
+
+SELECT de.dept_no,
+       AVG(s.salary) Ortalama
+FROM dept_emp de
+JOIN salaries s
+ON de.emp_no=s.emp_no
+GROUP BY de.dept_no;
+
+### TestNG
+
+@Test
+public void Question08(){
+
+    DBUtility.executeQuery("""
+            SELECT de.dept_no,
+                   AVG(s.salary)
+            FROM dept_emp de
+            JOIN salaries s
+            ON de.emp_no=s.emp_no
+            GROUP BY de.dept_no;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+---------------------------------------------------
+
+# Soru 9
+
+**Departman isimleri ile birlikte ortalama maaşları listeleyiniz.**
+
+### SQL
+
+SELECT d.dept_name,
+       AVG(s.salary) Ortalama
+FROM departments d
+JOIN dept_emp de
+ON d.dept_no=de.dept_no
+JOIN salaries s
+ON de.emp_no=s.emp_no
+GROUP BY d.dept_name;
+
+### TestNG
+
+@Test
+public void Question09(){
+
+    DBUtility.executeQuery("""
+            SELECT d.dept_name,
+                   AVG(s.salary)
+            FROM departments d
+            JOIN dept_emp de
+            ON d.dept_no=de.dept_no
+            JOIN salaries s
+            ON de.emp_no=s.emp_no
+            GROUP BY d.dept_name;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+------------------------------------------------------
+
+# Soru 10
+
+**10102 numaralı çalışanın tüm maaş geçmişini listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM salaries
+WHERE emp_no=10102
+ORDER BY from_date;
+
+### TestNG
+
+@Test
+public void Question10(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM salaries
+            WHERE emp_no=10102
+            ORDER BY from_date;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+--------------------------------------------------------
+
+# Soru 11
+
+**10102 numaralı çalışanın maaş artışlarını listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM salaries
+WHERE emp_no = 10102
+ORDER BY from_date;
+
+### TestNG
+
+@Test
+public void Question11() {
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM salaries
+            WHERE emp_no = 10102
+            ORDER BY from_date;
+            """);
+
+    List<HashMap<String, String>> data = DBUtility.getListData();
+
+    Assert.assertTrue(data.size() > 1);
+
+    for (int i = 1; i < data.size(); i++) {
+
+        int previousSalary = Integer.parseInt(data.get(i - 1).get("salary"));
+        int currentSalary = Integer.parseInt(data.get(i).get("salary"));
+
+        Assert.assertTrue(currentSalary >= previousSalary);
+
+    }
+
+}
+
+---------------------------------------------------------
+
+# Soru 12
+
+**En yüksek maaşa sahip çalışanı bulunuz.**
+
+### SQL
+
+SELECT emp_no, salary
+FROM salaries
+ORDER BY salary DESC
+LIMIT 1;
+
+### TestNG
+
+@Test
+public void Question12() {
+
+    DBUtility.executeQuery("""
+            SELECT emp_no, salary
+            FROM salaries
+            ORDER BY salary DESC
+            LIMIT 1;
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(), 1);
+
+}
+
+-----------------------------------------------
+
+# Soru 13
+
+**Sales departmanındaki en yüksek maaşlı çalışanı bulunuz.**
+
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name,
+       s.salary
+FROM employees e
+JOIN salaries s ON e.emp_no = s.emp_no
+JOIN dept_emp de ON e.emp_no = de.emp_no
+JOIN departments d ON de.dept_no = d.dept_no
+WHERE d.dept_name='Sales'
+ORDER BY s.salary DESC
+LIMIT 1;
+
+### TestNG
+
+@Test
+public void Question13(){
+
+    DBUtility.executeQuery("""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name,
+                   s.salary
+            FROM employees e
+            JOIN salaries s ON e.emp_no=s.emp_no
+            JOIN dept_emp de ON e.emp_no=de.emp_no
+            JOIN departments d ON de.dept_no=d.dept_no
+            WHERE d.dept_name='Sales'
+            ORDER BY s.salary DESC
+            LIMIT 1;
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+-----------------------------------------------------
+
+# Soru 14
+
+**01.01.1990'dan önce işe alınan çalışanları alfabetik sırayla listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM employees
+WHERE hire_date < '1990-01-01'
+ORDER BY first_name,last_name;
+
+### TestNG
+
+@Test
+public void Question14(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM employees
+            WHERE hire_date<'1990-01-01'
+            ORDER BY first_name,last_name;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+--------------------------------------------------
+
+# Soru 15
+
+**1985-1989 yılları arasında işe alınan çalışanları işe giriş tarihine göre sıralayınız.**
+
+### SQL
+
+SELECT *
+FROM employees
+WHERE hire_date BETWEEN '1985-01-01' AND '1989-12-31'
+ORDER BY hire_date;
+
+### TestNG
+
+@Test
+public void Question15(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM employees
+            WHERE hire_date
+            BETWEEN '1985-01-01'
+            AND '1989-12-31'
+            ORDER BY hire_date;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+------------------------------------------------------
+
+# Soru 16
+
+**Erkek çalışan sayısını bulunuz.**
+
+### SQL
+
+SELECT COUNT(*) AS TotalMale
+FROM employees
+WHERE gender='M';
+
+### TestNG
+
+@Test
+public void Question16(){
+
+    DBUtility.executeQuery("""
+            SELECT COUNT(*) TotalMale
+            FROM employees
+            WHERE gender='M';
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+----------------------------------------------
+
+# Soru 17
+
+**Kadın çalışan sayısını bulunuz.**
+
+### SQL
+
+SELECT COUNT(*) AS TotalFemale
+FROM employees
+WHERE gender='F';
+
+### TestNG
+
+@Test
+public void Question17(){
+
+    DBUtility.executeQuery("""
+            SELECT COUNT(*) TotalFemale
+            FROM employees
+            WHERE gender='F';
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+------------------------------------------------------
+
+# Soru 18
+
+**Cinsiyete göre çalışan sayılarını listeleyiniz.**
+
+### SQL
+
+SELECT gender,
+       COUNT(*) AS EmployeeCount
+FROM employees
+GROUP BY gender;
+
+### TestNG
+
+@Test
+public void Question18(){
+
+    DBUtility.executeQuery("""
+            SELECT gender,
+                   COUNT(*) EmployeeCount
+            FROM employees
+            GROUP BY gender;
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),2);
+
+}
+
+---------------------------------------------------------
+
+# Soru 19
+
+**Toplam çalışan sayısını bulunuz.**
+
+### SQL
+
+SELECT COUNT(*) AS TotalEmployee
+FROM employees;
+
+### TestNG
+
+@Test
+public void Question19(){
+
+    DBUtility.executeQuery("""
+            SELECT COUNT(*) TotalEmployee
+            FROM employees;
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+-----------------------------------------------------
+
+# Soru 20
+
+**Kaç farklı isimde çalışan olduğunu bulunuz.**
+
+### SQL
+
+SELECT COUNT(DISTINCT first_name) AS DifferentNames
+FROM employees;
+
+### TestNG
+
+@Test
+public void Question20(){
+
+    DBUtility.executeQuery("""
+            SELECT COUNT(DISTINCT first_name) DifferentNames
+            FROM employees;
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+-----------------------------------------------------
+
+# Soru 21
+
+**Kaç farklı departman olduğunu bulunuz.**
+
+### SQL
+
+SELECT COUNT(*) AS DepartmentCount
+FROM departments;
+
+### TestNG
+
+@Test
+public void Question21(){
+
+    DBUtility.executeQuery("""
+            SELECT COUNT(*) AS DepartmentCount
+            FROM departments;
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+--------------------------------------------------------
+
+# Soru 22
+
+**Her departmandaki çalışan sayılarını listeleyiniz.**
+
+### SQL
+
+SELECT de.dept_no,
+       COUNT(*) AS EmployeeCount
+FROM dept_emp de
+GROUP BY de.dept_no;
+
+### TestNG
+
+@Test
+public void Question22(){
+
+    DBUtility.executeQuery("""
+            SELECT de.dept_no,
+                   COUNT(*) AS EmployeeCount
+            FROM dept_emp de
+            GROUP BY de.dept_no;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-----------------------------------------------------------
+
+# Soru 23
+
+**20 Şubat 1990 tarihinden geriye doğru son 5 yılda işe alınan çalışanları listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM employees
+WHERE hire_date
+BETWEEN '1985-02-20'
+AND '1990-02-20';
+
+### TestNG
+
+@Test
+public void Question23(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM employees
+            WHERE hire_date
+            BETWEEN '1985-02-20'
+            AND '1990-02-20';
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+---------------------------------------------------------
+
+# Soru 24
+
+**"Annemarie Redmiles" isimli çalışanın bilgilerini listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM employees
+WHERE first_name='Annemarie'
+AND last_name='Redmiles';
+
+### TestNG
+
+@Test
+public void Question24(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM employees
+            WHERE first_name='Annemarie'
+            AND last_name='Redmiles';
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+-----------------------------------------------------------
+
+# Soru 25
+
+**"Annemarie Redmiles" isimli çalışanın maaş, departman ve unvan bilgilerini listeleyiniz.**
+
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name,
+       d.dept_name,
+       t.title,
+       s.salary
+FROM employees e
+JOIN dept_emp de
+ON e.emp_no=de.emp_no
+JOIN departments d
+ON de.dept_no=d.dept_no
+JOIN titles t
+ON e.emp_no=t.emp_no
+JOIN salaries s
+ON e.emp_no=s.emp_no
+WHERE e.first_name='Annemarie'
+AND e.last_name='Redmiles';
+
+### TestNG
+
+@Test
+public void Question25(){
+
+    DBUtility.executeQuery("""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name,
+                   d.dept_name,
+                   t.title,
+                   s.salary
+            FROM employees e
+            JOIN dept_emp de
+            ON e.emp_no=de.emp_no
+            JOIN departments d
+            ON de.dept_no=d.dept_no
+            JOIN titles t
+            ON e.emp_no=t.emp_no
+            JOIN salaries s
+            ON e.emp_no=s.emp_no
+            WHERE e.first_name='Annemarie'
+            AND e.last_name='Redmiles';
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-------------------------------------------------------
+
+# Soru 26
+
+**D005 departmanındaki çalışanları ve yöneticileri listeleyiniz.**
+
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name,
+       dm.emp_no AS manager_no
+FROM dept_emp de
+JOIN employees e
+ON de.emp_no=e.emp_no
+JOIN dept_manager dm
+ON de.dept_no=dm.dept_no
+WHERE de.dept_no='d005';
+
+### TestNG
+
+@Test
+public void Question26(){
+
+    DBUtility.executeQuery("""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name,
+                   dm.emp_no AS manager_no
+            FROM dept_emp de
+            JOIN employees e
+            ON de.emp_no=e.emp_no
+            JOIN dept_manager dm
+            ON de.dept_no=dm.dept_no
+            WHERE de.dept_no='d005';
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+--------------------------------------------------------------
+
+# Soru 27
+
+**24.02.1994 tarihinden sonra işe alınmış ve maaşı 50000'den yüksek çalışanları listeleyiniz.**
+
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name,
+       s.salary
+FROM employees e
+JOIN salaries s
+ON e.emp_no=s.emp_no
+WHERE e.hire_date>'1994-02-24'
+AND s.salary>50000;
+
+### TestNG
+
+@Test
+public void Question27(){
+
+    DBUtility.executeQuery("""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name,
+                   s.salary
+            FROM employees e
+            JOIN salaries s
+            ON e.emp_no=s.emp_no
+            WHERE e.hire_date>'1994-02-24'
+            AND s.salary>50000;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+----------------------------------------------------
+
+# Soru 28
+
+**Sales departmanında Manager unvanına sahip çalışanları listeleyiniz.**
+
+### SQL
+
+SELECT e.emp_no,
+       e.first_name,
+       e.last_name,
+       t.title
+FROM employees e
+JOIN dept_emp de
+ON e.emp_no=de.emp_no
+JOIN departments d
+ON de.dept_no=d.dept_no
+JOIN titles t
+ON e.emp_no=t.emp_no
+WHERE d.dept_name='Sales'
+AND t.title LIKE '%Manager%';
+
+### TestNG
+
+@Test
+public void Question28(){
+
+    DBUtility.executeQuery("""
+            SELECT e.emp_no,
+                   e.first_name,
+                   e.last_name,
+                   t.title
+            FROM employees e
+            JOIN dept_emp de
+            ON e.emp_no=de.emp_no
+            JOIN departments d
+            ON de.dept_no=d.dept_no
+            JOIN titles t
+            ON e.emp_no=t.emp_no
+            WHERE d.dept_name='Sales'
+            AND t.title LIKE '%Manager%';
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-----------------------------------------------------
+
+# Soru 29
+
+**10102 numaralı çalışanın tüm pozisyon geçmişini listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM titles
+WHERE emp_no=10102
+ORDER BY from_date;
+
+### TestNG
+
+@Test
+public void Question29(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM titles
+            WHERE emp_no=10102
+            ORDER BY from_date;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+--------------------------------------------------
+
+# Soru 30
+
+**Ortalama çalışan yaşını hesaplayınız.**
+
+### SQL
+
+SELECT ROUND(AVG(TIMESTAMPDIFF(YEAR,birth_date,CURDATE())),2)
+AS AverageAge
+FROM employees;
+
+### TestNG
+
+@Test
+public void Question30(){
+
+    DBUtility.executeQuery("""
+            SELECT ROUND(
+            AVG(TIMESTAMPDIFF(YEAR,birth_date,CURDATE())),2)
+            AS AverageAge
+            FROM employees;
+            """);
+
+    Assert.assertEquals(DBUtility.getRowCount(),1);
+
+}
+
+------------------------------------------------------
+
+# Soru 31
+
+**Her departmandaki çalışan sayısını bulunuz.**
+
+> Bu soru, 22. sorunun benzeridir. Ancak bu kez departman adı ile birlikte listeleyelim.
+
+### SQL
+
+SELECT d.dept_name,
+       COUNT(de.emp_no) AS EmployeeCount
+FROM departments d
+JOIN dept_emp de
+ON d.dept_no=de.dept_no
+GROUP BY d.dept_name;
+
+### TestNG
+
+@Test
+public void Question31(){
+
+    DBUtility.executeQuery("""
+            SELECT d.dept_name,
+                   COUNT(de.emp_no) EmployeeCount
+            FROM departments d
+            JOIN dept_emp de
+            ON d.dept_no=de.dept_no
+            GROUP BY d.dept_name;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-----------------------------------------------------
+
+# Soru 32
+
+**110022 numaralı çalışanın yöneticilik geçmişini listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM dept_manager
+WHERE emp_no=110022
+ORDER BY from_date;
+
+### TestNG
+
+@Test
+public void Question32(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM dept_manager
+            WHERE emp_no=110022
+            ORDER BY from_date;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-------------------------------------------------------
+
+# Soru 33
+
+**Her çalışanın toplam çalışma süresini hesaplayınız.**
+
+### SQL
+
+SELECT emp_no,
+       first_name,
+       last_name,
+       TIMESTAMPDIFF(YEAR,hire_date,CURDATE()) AS WorkingYear
+FROM employees;
+
+### TestNG
+
+@Test
+public void Question33(){
+
+    DBUtility.executeQuery("""
+            SELECT emp_no,
+                   first_name,
+                   last_name,
+                   TIMESTAMPDIFF(YEAR,hire_date,CURDATE()) WorkingYear
+            FROM employees;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-------------------------------------------------------------
+
+# Soru 34
+
+**Her çalışanın en güncel unvanını listeleyiniz.**
+
+### SQL
+
+SELECT t.emp_no,
+       e.first_name,
+       e.last_name,
+       t.title
+FROM titles t
+JOIN employees e
+ON t.emp_no=e.emp_no
+WHERE t.to_date='9999-01-01';
+
+
+### TestNG
+
+@Test
+public void Question34(){
+
+    DBUtility.executeQuery("""
+            SELECT t.emp_no,
+                   e.first_name,
+                   e.last_name,
+                   t.title
+            FROM titles t
+            JOIN employees e
+            ON t.emp_no=e.emp_no
+            WHERE t.to_date='9999-01-01';
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+---------------------------------------------------
+
+# Soru 35
+
+**D005 departmanındaki yöneticilerin ad ve soyadlarını listeleyiniz.**
+
+### SQL
+
+SELECT e.first_name,
+       e.last_name
+FROM dept_manager dm
+JOIN employees e
+ON dm.emp_no=e.emp_no
+WHERE dm.dept_no='d005';
+
+### TestNG
+
+@Test
+public void Question35(){
+
+    DBUtility.executeQuery("""
+            SELECT e.first_name,
+                   e.last_name
+            FROM dept_manager dm
+            JOIN employees e
+            ON dm.emp_no=e.emp_no
+            WHERE dm.dept_no='d005';
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+--------------------------------------------------
+
+# Soru 36
+
+**Çalışanları doğum tarihine göre sıralayınız.**
+
+### SQL
+
+SELECT *
+FROM employees
+ORDER BY birth_date;
+
+### TestNG
+
+@Test
+public void Question36(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM employees
+            ORDER BY birth_date;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+-------------------------------------------------
+
+# Soru 37
+
+**Nisan 1992'de işe alınan çalışanları listeleyiniz.**
+
+### SQL
+
+SELECT *
+FROM employees
+WHERE hire_date
+BETWEEN '1992-04-01'
+AND '1992-04-30';
+
+### TestNG
+
+@Test
+public void Question37(){
+
+    DBUtility.executeQuery("""
+            SELECT *
+            FROM employees
+            WHERE hire_date
+            BETWEEN '1992-04-01'
+            AND '1992-04-30';
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+---------------------------------------------------
+
+# Soru 38
+
+**10102 numaralı çalışanın çalıştığı tüm departmanları listeleyiniz.**
+
+### SQL
+
+SELECT d.dept_name,
+       de.from_date,
+       de.to_date
+FROM dept_emp de
+JOIN departments d
+ON de.dept_no=d.dept_no
+WHERE de.emp_no=10102
+ORDER BY de.from_date;
+
+
+### TestNG
+
+@Test
+public void Question38(){
+
+    DBUtility.executeQuery("""
+            SELECT d.dept_name,
+                   de.from_date,
+                   de.to_date
+            FROM dept_emp de
+            JOIN departments d
+            ON de.dept_no=d.dept_no
+            WHERE de.emp_no=10102
+            ORDER BY de.from_date;
+            """);
+
+    Assert.assertTrue(DBUtility.getRowCount()>0);
+
+}
+
+--------------------------------------------------
+
+# 🎯 Proje Tamamlandı
+
+Bu çalışma ile proje dokümanındaki **38 SQL sorgusunun tamamı** için örnek SQL sorguları ve TestNG test metotları hazırlanmıştır.
+
+## Ancak önemli bir not
+
+Bu çözümler, **MySQL'in resmi `employees` örnek veritabanı** temel alınarak hazırlanmıştır. Eğitmeninizin kullandığı veritabanında bazı kayıtlar veya tablo yapıları farklı olabilir. Özellikle:
+
+* `dept_emp`
+* `dept_manager`
+* `titles`
+* `salaries`
+
+tablolarındaki geçmiş kayıtlar nedeniyle bazı sorularda yalnızca `JOIN` yapmak yerine **yalnızca güncel kayıtların (`to_date = '9999-01-01'`) filtrelenmesi** gerekebilir. Aksi halde aynı çalışan birden fazla satırla dönebilir.
+
+
+
+### Projeyi daha profesyonel hale getirmek için öneriler
+
+Teslim edilecek bir proje için aşağıdaki geliştirmeleri yapmanı öneririm:
+
+* `DBUtility` sınıfına `getCellData()`, `getColumnData()`, `getRowData()` gibi yardımcı metotlar eklemek.
+
+* Sorgu sonuçlarını sadece satır sayısıyla değil, dönen veri içeriğiyle de doğrulamak (`Assert.assertEquals`, `Assert.assertTrue`, beklenen değer kontrolü vb.).
+
+* `@BeforeMethod` ve `@AfterMethod` kullanarak testleri birbirinden bağımsız hale getirmek.
+
+* SQL sorgularını sabit metinler yerine ayrı bir yardımcı sınıfta veya enum yapısında toplamak.
+
+* İsteğe bağlı olarak sonuçları loglamak veya raporlamak (örneğin TestNG raporları ya da Extent Reports).
+
+Bu geliştirmelerle proje, yalnızca çalışan bir ödev olmaktan çıkıp gerçek bir SDET proje standardına yaklaşacaktır.
+
+
+
+
+
+
+
+
+
+
+
