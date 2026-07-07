@@ -74,10 +74,13 @@ public class DBUtility {
 
     public static int getRowCount() {
         try {
-            int row = resultSet.getRow();
-            resultSet.last();
-            resultSet.beforeFirst();
-            return row;
+            if (resultSet == null) return 0; // NullPointer almamak için güvenlik kontrolü
+
+            resultSet.last();                // 1. ÖNCE imleci en son satıra götür.
+            int rowCount = resultSet.getRow(); // 2. SONRA durduğun son satırın numarasını al (Bu bize toplam satır sayısını verir).
+            resultSet.beforeFirst();         // 3. İmleci tekrar en başa çek (Daha sonra verileri okumak isterseniz diye).
+
+            return rowCount;                 // Doğru satır sayısını dön.
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
