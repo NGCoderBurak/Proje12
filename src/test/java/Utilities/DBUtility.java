@@ -11,7 +11,7 @@ public class DBUtility {
     // getDataFromDB metodu oluşturmak üzere
     public static Connection connection;
     public static Statement sorguEkrani;
-    private static ResultSet resultSet;
+    private static ResultSet resultSet; // Kullandığımız ResultSet değişkeni bu
 
     public static void JDBC_Open() {
         String serverDBURL = "jdbc:mysql://acela.proxy.rlwy.net:15150/employees";
@@ -26,21 +26,18 @@ public class DBUtility {
         }
     }
 
-
     public static void JDBC_Close() {
         try {
-            connection.close();
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
         } catch (Exception ex) {
             System.out.println("ex.getMessage() = " + ex.getMessage());
         }
     }
 
-
-    public static ArrayList<ArrayList<String>>
-
-    getListData(String sorgu) {
+    public static ArrayList<ArrayList<String>> getListData(String sorgu) {
         ArrayList<ArrayList<String>> tablo = new ArrayList<>();
-
         try {
             ResultSet rs = sorguEkrani.executeQuery(sorgu);
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -56,13 +53,12 @@ public class DBUtility {
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-
         return tablo;
     }
 
-
     public static void executeQuery(String sql) {
         try {
+            // ResultSet'in ileri-geri hareket edebilmesi (Scrollable) için tanımlama
             sorguEkrani = connection.createStatement(
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY);
@@ -74,15 +70,33 @@ public class DBUtility {
 
     public static int getRowCount() {
         try {
-            if (resultSet == null) return 0; // NullPointer almamak için güvenlik kontrolü
+            if (resultSet == null) return 0;
 
-            resultSet.last();                // 1. ÖNCE imleci en son satıra götür.
-            int rowCount = resultSet.getRow(); // 2. SONRA durduğun son satırın numarasını al (Bu bize toplam satır sayısını verir).
-            resultSet.beforeFirst();         // 3. İmleci tekrar en başa çek (Daha sonra verileri okumak isterseniz diye).
+            resultSet.last();
+            int rowCount = resultSet.getRow();
+            resultSet.beforeFirst();
 
-            return rowCount;                 // Doğru satır sayısını dön.
+            return rowCount;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
+    public static Object getCellValue(int row, int col) {
+        try {
+            if (resultSet == null) {
+                throw new RuntimeException("Önce executeQuery metodu ile bir sorgu çalıştırmalısınız!");
+            }
+
+            resultSet.beforeFirst();
+            for (int i = 0; i < row; i++) {
+                resultSet.next();
+            }
+            return resultSet.getObject(col);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Hücre değeri okunurken hata oluştu: " + e.getMessage());
+        }
+    }
 }
+
