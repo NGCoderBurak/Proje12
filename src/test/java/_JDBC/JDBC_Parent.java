@@ -14,19 +14,24 @@ public class JDBC_Parent {
         String password = "SDET123!";
 
         try {
-            connection = DriverManager.getConnection(db_url, username, password);
-            sorguEkrani = connection.createStatement();
+            // Bağlantı zaten açık ise tekrar açmaya çalışıp sunucuyu yormayalım
+            if (connection == null || connection.isClosed()) {
+                connection = DriverManager.getConnection(db_url, username, password);
+                sorguEkrani = connection.createStatement();
+            }
         } catch (Exception ex) {
-            System.out.println("ex.getMessage() = " + ex.getMessage());
+            System.out.println("Bağlantı açılırken hata oluştu: " + ex.getMessage());
         }
     }
 
     public static void DBConnectionClose() {
         try {
-            connection.close();
+            // NullPointerException almamak için önce null ve kapalı olma kontrolü yapıyoruz
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
         } catch (Exception ex) {
-            System.out.println("ex.getMessage() = " + ex.getMessage());
+            System.out.println("Bağlantı kapatılırken hata oluştu: " + ex.getMessage());
         }
     }
-
 }
